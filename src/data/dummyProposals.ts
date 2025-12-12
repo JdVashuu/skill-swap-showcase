@@ -1,0 +1,63 @@
+import { Proposal, ProposalsData } from "@/types/proposal";
+
+export const dummyProposals: ProposalsData = {
+  received: [
+    {
+      id: "prop-1",
+      userId: "user-2",
+      userName: "Mike Rodriguez",
+      userInitials: "MR",
+      skillTitle: "Photography for Web Dev Tutorial",
+      status: "pending",
+      message: "Hi! I'd love to learn web development from you. In exchange, I can teach you professional photography techniques.",
+      createdAt: new Date("2024-03-14T10:00:00"),
+      updatedAt: new Date("2024-03-14T10:00:00"),
+    },
+    {
+      id: "prop-2",
+      userId: "user-3",
+      userName: "Emily Watson",
+      userInitials: "EW",
+      skillTitle: "Yoga Classes for Design Work",
+      status: "accepted",
+      message: "Interested in trading yoga instruction for your graphic design skills!",
+      createdAt: new Date("2024-03-12T14:30:00"),
+      updatedAt: new Date("2024-03-13T09:00:00"),
+    },
+  ],
+  sent: [
+    {
+      id: "prop-3",
+      userId: "user-4",
+      userName: "David Kim",
+      userInitials: "DK",
+      skillTitle: "Spanish Lessons for Marketing Help",
+      status: "pending",
+      message: "I can help with your marketing strategy in exchange for Spanish lessons.",
+      createdAt: new Date("2024-03-13T11:00:00"),
+      updatedAt: new Date("2024-03-13T11:00:00"),
+    },
+    {
+      id: "prop-4",
+      userId: "user-5",
+      userName: "Lisa Martinez",
+      userInitials: "LM",
+      skillTitle: "Carpentry for Language Exchange",
+      status: "declined",
+      message: "Would love to help with your carpentry project for language practice.",
+      createdAt: new Date("2024-03-10T16:00:00"),
+      updatedAt: new Date("2024-03-11T10:00:00"),
+    },
+    {
+      id: "prop-5",
+      userId: "user-6",
+      userName: "James Thompson",
+      userInitials: "JT",
+      skillTitle: "Cooking Lessons Swap",
+      status: "completed",
+      message: "Let's exchange cooking techniques!",
+      createdAt: new Date("2024-02-20T09:00:00"),
+      updatedAt: new Date("2024-03-05T17:00:00"),
+    },
+  ],
+};
