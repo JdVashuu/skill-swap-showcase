@@ -3,29 +3,46 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Calendar, Star, Edit } from "lucide-react";
+import { MapPin, Calendar, Star, Edit, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useProfile } from "@/hooks/useProfile";
 
 const Profile = () => {
-  // Dummy profile data
-  const profile = {
-    name: "Sarah Chen",
-    initials: "SC",
-    location: "San Francisco, CA",
-    bio: "Full-stack developer passionate about teaching and learning new skills. I love connecting with people and sharing knowledge!",
-    memberSince: "March 2024",
-    rating: 4.8,
-    reviewCount: 12,
-    skillsOffered: ["React", "JavaScript", "CSS", "TypeScript", "Node.js"],
-    skillsWanted: ["Photography", "Spanish", "Yoga"],
-    completedSwaps: 8,
-  };
+  const { profile, isLoading, error } = useProfile();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pb-20 md:pt-20">
+        <Navbar />
+        <div className="flex items-center justify-center h-[60vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen pb-20 md:pt-20">
+        <Navbar />
+        <div className="flex items-center justify-center h-[60vh]">
+          <p className="text-muted-foreground">Failed to load profile</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-20 md:pt-20">
       <Navbar />
       
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {error && (
+          <div className="text-center py-4 mb-4 text-destructive">
+            Failed to load latest profile. Showing cached data.
+          </div>
+        )}
+
         <Card className="p-8 card-shadow">
           {/* Header */}
           <div className="flex flex-col md:flex-row items-start gap-6 mb-8 pb-8 border-b">
@@ -39,7 +56,7 @@ const Profile = () => {
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <h1 className="text-3xl font-bold mb-1">{profile.name}</h1>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                     <div className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
                       <span>{profile.location}</span>
@@ -58,7 +75,7 @@ const Profile = () => {
                 </Button>
               </div>
               
-              <div className="flex items-center gap-4 mb-4">
+              <div className="flex items-center gap-4 mb-4 flex-wrap">
                 <div className="flex items-center gap-1">
                   <Star className="w-5 h-5 fill-accent text-accent" />
                   <span className="font-semibold text-lg">{profile.rating}</span>
@@ -66,7 +83,7 @@ const Profile = () => {
                     ({profile.reviewCount} reviews)
                   </span>
                 </div>
-                <div className="h-6 w-px bg-border" />
+                <div className="h-6 w-px bg-border hidden sm:block" />
                 <div>
                   <span className="font-semibold text-lg">{profile.completedSwaps}</span>
                   <span className="text-sm text-muted-foreground ml-1">
