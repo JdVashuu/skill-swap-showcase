@@ -2,69 +2,13 @@ import { Navbar } from "@/components/Navbar";
 import { ListingCard } from "@/components/ListingCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
 import { useState } from "react";
-
-// Dummy data
-const dummyListings = [
-  {
-    id: "1",
-    userName: "Sarah Chen",
-    userInitials: "SC",
-    skillTitle: "Web Development Tutoring",
-    tags: ["React", "JavaScript", "CSS"],
-    location: "San Francisco, CA",
-    type: "offer" as const,
-  },
-  {
-    id: "2",
-    userName: "Mike Rodriguez",
-    userInitials: "MR",
-    skillTitle: "Photography Sessions",
-    tags: ["Portrait", "Events", "Editing"],
-    location: "Los Angeles, CA",
-    type: "offer" as const,
-  },
-  {
-    id: "3",
-    userName: "Emily Watson",
-    userInitials: "EW",
-    skillTitle: "Looking for Yoga Instructor",
-    tags: ["Fitness", "Wellness", "Beginner"],
-    location: "Austin, TX",
-    type: "want" as const,
-  },
-  {
-    id: "4",
-    userName: "David Kim",
-    userInitials: "DK",
-    skillTitle: "Graphic Design Services",
-    tags: ["Logo", "Branding", "Illustrator"],
-    location: "Seattle, WA",
-    type: "offer" as const,
-  },
-  {
-    id: "5",
-    userName: "Lisa Martinez",
-    userInitials: "LM",
-    skillTitle: "Spanish Language Exchange",
-    tags: ["Language", "Conversation", "Culture"],
-    location: "Miami, FL",
-    type: "offer" as const,
-  },
-  {
-    id: "6",
-    userName: "James Thompson",
-    userInitials: "JT",
-    skillTitle: "Need Help with Carpentry",
-    tags: ["Woodworking", "DIY", "Furniture"],
-    location: "Portland, OR",
-    type: "want" as const,
-  },
-];
+import { useListings } from "@/hooks/useListings";
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const { listings, isLoading, error } = useListings({ searchQuery });
 
   return (
     <div className="min-h-screen pb-20 md:pt-20">
@@ -93,12 +37,36 @@ const Home = () => {
           </Button>
         </div>
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-12">
+            <p className="text-destructive mb-2">Failed to load listings</p>
+            <p className="text-sm text-muted-foreground">Showing cached results</p>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && listings.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No listings found matching your search</p>
+          </div>
+        )}
+
         {/* Listings Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {dummyListings.map((listing) => (
-            <ListingCard key={listing.id} {...listing} />
-          ))}
-        </div>
+        {!isLoading && listings.length > 0 && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {listings.map((listing) => (
+              <ListingCard key={listing.id} {...listing} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
