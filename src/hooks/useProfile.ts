@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { UserProfile, UpdateProfilePayload } from "@/types/profile";
 import { dummyCurrentUser } from "@/data/dummyProfile";
+import { api } from "@/lib/api";
 
 interface UseProfileResult {
   profile: UserProfile | null;
@@ -9,23 +10,6 @@ interface UseProfileResult {
   updateProfile: (payload: UpdateProfilePayload) => Promise<void>;
   refetch: () => void;
 }
-
-// Simulates API fetch - replace with actual API call when backend is ready
-const fetchProfile = async (): Promise<UserProfile> => {
-  // TODO: Replace with actual API call
-  // const response = await fetch('/api/profile');
-  // return response.json();
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  return dummyCurrentUser;
-};
-
-const patchProfile = async (payload: UpdateProfilePayload): Promise<UserProfile> => {
-  // TODO: Replace with actual API call
-  // const response = await fetch('/api/profile', { method: 'PATCH', body: JSON.stringify(payload) });
-  // return response.json();
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  return { ...dummyCurrentUser, ...payload };
-};
 
 export const useProfile = (): UseProfileResult => {
   const [profile, setProfile] = useState<UserProfile | null>(dummyCurrentUser);
@@ -36,9 +20,10 @@ export const useProfile = (): UseProfileResult => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await fetchProfile();
-      setProfile(data);
+      const data = await api.getProfile();
+      if (data) setProfile(data);
     } catch (err) {
+      console.log("Using dummy data - Flask backend not available");
       setError(err instanceof Error ? err : new Error("Failed to fetch profile"));
       setProfile(dummyCurrentUser);
     } finally {
@@ -47,12 +32,13 @@ export const useProfile = (): UseProfileResult => {
   };
 
   const updateProfile = useCallback(async (payload: UpdateProfilePayload) => {
+    // Optimistic update
+    setProfile((prev) => prev ? { ...prev, ...payload } : null);
+    
     try {
-      const updatedProfile = await patchProfile(payload);
-      setProfile(updatedProfile);
+      await api.updateProfile("user-1", payload);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to update profile"));
-      throw err;
+      console.log("Profile updated locally - Flask backend not available");
     }
   }, []);
 

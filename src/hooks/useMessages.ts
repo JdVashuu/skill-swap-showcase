@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { Message, Conversation, SendMessagePayload } from "@/types/message";
+import { Message, Conversation } from "@/types/message";
 import { dummyConversations, dummyMessages } from "@/data/dummyMessages";
+import { api } from "@/lib/api";
 
 interface UseMessagesResult {
   conversations: Conversation[];
@@ -12,44 +13,6 @@ interface UseMessagesResult {
   sendMessage: (content: string) => Promise<void>;
   refetch: () => void;
 }
-
-// Simulates API fetch - replace with actual API call when backend is ready
-const fetchConversations = async (): Promise<Conversation[]> => {
-  // TODO: Replace with actual API call
-  // const response = await fetch('/api/conversations');
-  // return response.json();
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  return dummyConversations;
-};
-
-const fetchMessages = async (conversationId: string): Promise<Message[]> => {
-  // TODO: Replace with actual API call
-  // const response = await fetch(`/api/conversations/${conversationId}/messages`);
-  // return response.json();
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  return dummyMessages[conversationId] || [];
-};
-
-const postMessage = async (payload: SendMessagePayload): Promise<Message> => {
-  // TODO: Replace with actual API call
-  // const response = await fetch('/api/messages', { method: 'POST', body: JSON.stringify(payload) });
-  // return response.json();
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  
-  const newMessage: Message = {
-    id: `msg-${Date.now()}`,
-    conversationId: payload.conversationId,
-    senderId: "user-1",
-    senderName: "You",
-    senderInitials: "ME",
-    content: payload.content,
-    timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    createdAt: new Date(),
-    isOwn: true,
-  };
-  
-  return newMessage;
-};
 
 export const useMessages = (): UseMessagesResult => {
   const [conversations, setConversations] = useState<Conversation[]>(dummyConversations);
@@ -63,12 +26,13 @@ export const useMessages = (): UseMessagesResult => {
   const loadConversations = async () => {
     setIsLoading(true);
     try {
-      const data = await fetchConversations();
-      setConversations(data);
-      if (data.length > 0 && !activeConversationId) {
-        setActiveConversationId(data[0].id);
+      const data = await api.getConversations();
+      if (data.length > 0) {
+        setConversations(data);
+        if (!activeConversationId) setActiveConversationId(data[0].id);
       }
     } catch (err) {
+      console.log("Using dummy data - Flask backend not available");
       setError(err instanceof Error ? err : new Error("Failed to fetch conversations"));
       setConversations(dummyConversations);
     } finally {
@@ -78,13 +42,12 @@ export const useMessages = (): UseMessagesResult => {
 
   const loadMessages = useCallback(async () => {
     if (!activeConversationId) return;
-    
     setIsLoading(true);
     try {
-      const data = await fetchMessages(activeConversationId);
-      setMessages(data);
+      const data = await api.getMessages(activeConversationId);
+      setMessages(data.length > 0 ? data : (dummyMessages[activeConversationId] || []));
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to fetch messages"));
+      console.log("Using dummy messages - Flask backend not available");
       setMessages(dummyMessages[activeConversationId] || []);
     } finally {
       setIsLoading(false);
@@ -94,25 +57,36 @@ export const useMessages = (): UseMessagesResult => {
   const sendMessage = useCallback(async (content: string) => {
     if (!activeConversationId || !content.trim()) return;
 
+    const optimisticMessage: Message = {
+      id: `msg-${Date.now()}`,
+      conversationId: activeConversationId,
+      senderId: "user-1",
+      senderName: "You",
+      senderInitials: "ME",
+      content: content.trim(),
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      createdAt: new Date(),
+      isOwn: true,
+    };
+
+    // Optimistic update
+    setMessages((prev) => [...prev, optimisticMessage]);
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.id === activeConversationId
+          ? { ...conv, lastMessage: content.trim(), lastMessageAt: new Date() }
+          : conv
+      )
+    );
+
     try {
-      const newMessage = await postMessage({
+      await api.sendMessage({
         conversationId: activeConversationId,
         content: content.trim(),
+        senderId: "user-1",
       });
-      
-      setMessages((prev) => [...prev, newMessage]);
-      
-      // Update conversation's last message
-      setConversations((prev) =>
-        prev.map((conv) =>
-          conv.id === activeConversationId
-            ? { ...conv, lastMessage: content.trim(), lastMessageAt: new Date() }
-            : conv
-        )
-      );
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to send message"));
-      throw err;
+      console.log("Message sent locally - Flask backend not available");
     }
   }, [activeConversationId]);
 
